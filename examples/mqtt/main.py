@@ -26,22 +26,31 @@ import asyncio
 import tempfile
 import time
 import tomllib
+import random
+import signal
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import Thread
 from typing import Optional, Tuple
-
-from transmit_data import (
-    set_properties,
-    stream_aggregates,
-    stream_individuals,
-    unset_properties,
-)
 
 from astarte.device import DeviceMqtt
 
 _INTERFACES_DIR = Path(__file__).parent.joinpath("interfaces").absolute()
 _CONFIGURATION_FILE = Path(__file__).parent.joinpath("config.toml").absolute()
 
+class SignalHandler:
+    stop = False
+
+    def __init__(self):
+        # Ctrl+C
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+
+        # Supervisor/process manager signals
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+        signal.signal(signal.SIGQUIT, self.exit_gracefully)
+
+    def exit_gracefully(self, *args):
+        self.stop = True
 
 def on_connected_cbk(_):
     """
@@ -77,6 +86,22 @@ def _generate_async_loop() -> Tuple[asyncio.AbstractEventLoop, Thread]:
     return _loop, other_thread
 
 
+def stream_individual(device: DeviceMqtt, sensor_name: str, data: float):
+    """
+    Stream a float individual value on the specified sensor.
+    """
+    PATH = f"/{sensor_name}/value"
+
+    print(f"Streaming data path:{PATH} data:{data}")
+
+    device.send(
+        "org.astarte-platform.genericsensors.Values",
+        PATH,
+        data,
+        datetime.now(tz=timezone.utc),
+    )
+
+
 def main(cb_loop: Optional[asyncio.AbstractEventLoop] = None):
 
     with open(_CONFIGURATION_FILE, "rb") as config_fp:
@@ -85,11 +110,6 @@ def main(cb_loop: Optional[asyncio.AbstractEventLoop] = None):
         _REALM = config["REALM"]
         _CREDENTIALS_SECRET = config["CREDENTIALS_SECRET"]
         _PAIRING_URL = config["PAIRING_URL"]
-        _STREAM_INDIVIDUAL_DATA = config.get("STREAM_INDIVIDUAL_DATA", True)
-        _STREAM_AGGREGATED_DATA = config.get("STREAM_AGGREGATED_DATA", True)
-        _SET_PROPERTIES = config.get("SET_PROPERTIES", True)
-        _UNSET_PROPERTIES = config.get("UNSET_PROPERTIES", True)
-        _WAIT_FOR_INCOMING_S = config.get("WAIT_FOR_INCOMING_S", 0)
 
     # Creating a temporary directory
     with tempfile.TemporaryDirectory(prefix="python_sdk_examples_") as temp_dir:
@@ -119,24 +139,10 @@ def main(cb_loop: Optional[asyncio.AbstractEventLoop] = None):
 
         time.sleep(1)
 
-        if _STREAM_INDIVIDUAL_DATA:
-            print("Streaming individual data.")
-            stream_individuals(device)
-
-        if _STREAM_AGGREGATED_DATA:
-            print("Streaming aggregated data.")
-            stream_aggregates(device)
-
-        if _SET_PROPERTIES:
-            print("Setting properties data.")
-            set_properties(device)
-
-        if _UNSET_PROPERTIES:
-            print("Unsetting properties data.")
-            unset_properties(device)
-
-        print(f"Waiting {_WAIT_FOR_INCOMING_S} seconds for server data.")
-        time.sleep(_WAIT_FOR_INCOMING_S)
+        signal_handler = SignalHandler()
+        while not signal_handler.stop:
+            stream_individual(device, "dummy_temperature", 20.0 + (10 * random.betavariate(2.0, 6.0)))
+            time.sleep(1)
 
         print("Disconnecting the device.")
         device.disconnect()
