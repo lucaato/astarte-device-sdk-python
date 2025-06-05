@@ -17,7 +17,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [build-system]
-requires = ["setuptools>=72.1.0"]
+requires = [
+  "maturin>=1.8,<2.0",
+  "setuptools>=61.0.0",
+  "wheel",
+  # Must be kept in sync with `project.dependencies`
+  "cffi>=1.12; platform_python_implementation != 'PyPy'",
+  "setuptools-rust>=1.7.0",
+]
+#build-backend = "maturin"
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -47,8 +55,9 @@ maintainers = [
   {name = "Simone Orru", email = "simone.orru@secomind.com"},
 ]
 classifiers = [
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Operating System :: OS Independent"
 ]
 
@@ -64,7 +73,16 @@ e2e = ["termcolor", "python-dateutil"]
 [tool.setuptools.dynamic]
 version = {attr = "astarte.device.__version__"}
 
+[[tool.setuptools-rust.ext-modules]]
+target = "astarte.hazmat.bindings._astarte_device_lib"
+path = "rust/Cargo.toml"
+py-limited-api = "auto"
+rust-version = ">=1.82.0"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["astarte.*"]
 exclude = ["contrib", "docs", "tests*", "venv"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]

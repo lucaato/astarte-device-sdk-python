@@ -1,0 +1,19 @@
+# Copyright 2022 SECO Mind Srl
+#
+# SPDX-License-Identifier: CC0-1.0
+
+.idea/
+
+/target
+/astarte-device-sdk-derive/target
+
+# Databases used for the examples
+astarte-example-db.*
+
+/.pre-commit-config.yaml
+
+# Tarpaulin report
+tarpaulin-report.html
+
+# Configuration directories
+.helix
