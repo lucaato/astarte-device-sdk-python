@@ -16,10 +16,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-REALM = "<REALM>"
-PAIRING_URL = "<PAIRING_URL>"
-DEVICE_ID = "<DEVICE_ID>"
-CREDENTIALS_SECRET = "<CREDENTIALS_SECRET>"
+REALM = "dev"
+PAIRING_URL = "https://api.eu1.astarte.cloud/pairing"
+DEVICE_ID = "YPaEbDNiRLCYx4wkvktwsg"
+CREDENTIALS_SECRET = "mWbYjaNBckeXohDXphYlNVrthNgGE18bNUwp9TQLszo="
 STREAM_INDIVIDUAL_DATA = true
 STREAM_AGGREGATED_DATA = true
 SET_PROPERTIES = true

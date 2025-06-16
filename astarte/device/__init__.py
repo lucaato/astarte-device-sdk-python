@@ -20,6 +20,7 @@
 __version__ = "0.13.4"
 
 # Export what we care about
+from .database import AstarteDatabase, AstarteDatabaseSQLite
 from .device_grpc import DeviceGrpc
 from .device_mqtt import DeviceMqtt
 from .exceptions import (

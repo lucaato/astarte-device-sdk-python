@@ -28,7 +28,7 @@ from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 from astarte.device.exceptions import (
     InterfaceFileDecodeError,
@@ -420,6 +420,10 @@ class Device(ABC):
             None,
             None,
         )
+
+    @abstractmethod
+    def store(self) -> Optional[PropertyAccess]:
+        
 
     @abstractmethod
     def _send_generic(
